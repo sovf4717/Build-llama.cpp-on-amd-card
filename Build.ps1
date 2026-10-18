@@ -56,7 +56,7 @@ $configureArgs = @(
     '-DCMAKE_CXX_FLAGS=-Wno-cast-qual',
     '-DGGML_HIP=ON',
     '-DGGML_ROCBLASLT=OFF',
-    '-DHIP_TARGETS="gfx1200"',
+'-DAMDGPU_TARGETS=gfx1200',
     '-DGGML_CCACHE=OFF'
 )
 
