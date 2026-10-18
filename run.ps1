@@ -1,8 +1,9 @@
-# 若 llama.cpp 源码不存在则 clone，存在则跳过
-if (-not (Test-Path "llama.cpp")) {
-    git clone https://github.com/ggml-org/llama.cpp.git
+# 初始化子模块：若 llama.cpp 尚未初始化（目录为空或缺少 src）则 init
+if (-not (Test-Path "llama.cpp\src")) {
+    Write-Host "初始化 llama.cpp 子模块..." -ForegroundColor Cyan
+    git submodule update --init --recursive
 } else {
-    Write-Host "llama.cpp 已存在，跳过 clone" -ForegroundColor Yellow
+    Write-Host "llama.cpp 子模块已初始化，跳过" -ForegroundColor Yellow
 }
 
 # 若 Build.ps1 已在 llama.cpp 目录中则直接运行，否则复制过去再运行

@@ -6,6 +6,9 @@ $env:HIP_DEVICE_LIB_PATH = "E:\Python312\Lib\site-packages\_rocm_sdk_core\lib\ll
 $env:HIP_PLATFORM      = "amd"
 $env:PATH = "E:\Python312\Lib\site-packages\_rocm_sdk_core\bin;E:\Python312\Lib\site-packages\_rocm_sdk_core\lib\llvm\bin;" + $env:PATH
 
+# 当前源码目录下的cecli rocm开发包
+$rocmPkgs = Join-Path $PWD ".cecli\temp\rocm-pkgs"
+
 # MSVC environment (vcvars64) for linker and rc.exe, import via temp batch
 # to avoid native command quoting issues with the spaced path
 $vcvars = 'E:\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat'
@@ -15,69 +18,46 @@ cmd /c $bat | ForEach-Object { if ($_ -match '^(.*?)=(.*)$') { Set-Item -Force "
 Remove-Item $bat -Force
 
 # clean build: remove build folder before every build
-
 Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
-
 Write-Host "Removed build folder, starting fresh build"
-
-
-
 $cmake = "E:\cmake-4.4.2-windows-x86_64\bin\cmake.exe"
 
 $configureArgs = @(
-
     '-S', '.',
-
     '-B', 'build',
-
     '-G', 'Ninja',
-
     '-DCMAKE_BUILD_TYPE=Release',
-
     '-DCMAKE_C_COMPILER=E:\Python312\Lib\site-packages\_rocm_sdk_core\lib\llvm\bin\clang.exe',
-
     '-DCMAKE_CXX_COMPILER=E:\Python312\Lib\site-packages\_rocm_sdk_core\lib\llvm\bin\clang++.exe',
-
-    '-DCMAKE_PREFIX_PATH=E:\Python312\Lib\site-packages\_rocm_sdk_core;E:\llama.cpp\.cecli\temp\rocm-pkgs',
-
-    '-Dhip_DIR=E:\llama.cpp\.cecli\temp\rocm-pkgs',
-
-    '-Dhipblas_DIR=E:\llama.cpp\.cecli\temp\rocm-pkgs',
-
-    '-Drocblas_DIR=E:\llama.cpp\.cecli\temp\rocm-pkgs',
-
+    '-DCMAKE_PREFIX_PATH=E:\Python312\Lib\site-packages\_rocm_sdk_core;' + $rocmPkgs,
+    '-Dhip_DIR=' + $rocmPkgs,
+    '-Dhipblas_DIR=' + $rocmPkgs,
+    '-Drocblas_DIR=' + $rocmPkgs,
     '-DCMAKE_CXX_FLAGS=-Wno-cast-qual',
-
-
     '-DGGML_HIP=ON',
-
+    '-DGGML_ROCBLASLT=OFF',
+    '-DHIP_TARGETS="gfx1200"',
     '-DGGML_CCACHE=OFF'
-
 )
 
 $rcExe = Get-Command rc -ErrorAction SilentlyContinue
-
 if (-not $rcExe) { throw "rc.exe not found after vcvars import" }
-
 $env:RC = $rcExe.Source -replace '\\\\', '\\'
 
 & $cmake @configureArgs
-
 if ($LASTEXITCODE -ne 0) { exit 1 }
 
-
-
 # remove RERUN_CMAKE section from build.ninja to stop the dirty-manifest loop
-# (root cause: .git/index is a dep; CMake re-runs update it, triggering infinite re-runs)
+# (root cause: .git/index is a dep; CMake re‑runs update it, triggering infinite re‑runs)
 $bf = "build\build.ninja"
 if (Test-Path $bf) {
     $lines = [System.IO.File]::ReadAllLines($bf)
     $result = [System.Collections.Generic.List[string]]::new()
     $skipSection = $false
     foreach ($line in $lines) {
-        if ($line -match '^# Re-run CMake if any of its inputs changed\.$') {
+        if ($line -match '^# Re‑run CMake if any of its inputs changed\.$') {
             $skipSection = $true
-            $result.Add("# auto-regeneration disabled")
+            $result.Add("# auto‑regeneration disabled")
             continue
         }
         if ($skipSection -and $line -match '^###') { $skipSection = $false }
