@@ -18,4 +18,6 @@ if (Test-Path $dst) {
 
 Write-Host "" -NoNewline
 Write-Host "Starting build..." -ForegroundColor Cyan
+# 切换到 llama.cpp 目录后再运行 Build.ps1（cmake -S . 依赖 CWD）
+Set-Location (Split-Path $dst -Parent)
 powershell -ExecutionPolicy Bypass -File $dst
