@@ -9,6 +9,7 @@ $env:PATH = "E:\Python312\Lib\site-packages\_rocm_sdk_core\bin;E:\Python312\Lib\
 # Extract ROCm devel cmake packages (one-time; skip if already extracted)
 $develExDir = Join-Path $PWD ".cecli\temp\rocm-devel"
 $rocmDevel  = Join-Path $develExDir "_rocm_sdk_devel"
+$env:ROCM_DEVEL_DIR    = $rocmDevel
 $hipPkgsFile = Join-Path $rocmDevel "lib\cmake\hip\hip-config.cmake"
 if (-not (Test-Path $hipPkgsFile)) {
     Write-Host "Extracting ROCm devel cmake package..." -ForegroundColor Cyan
