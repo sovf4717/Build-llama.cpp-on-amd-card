@@ -98,4 +98,17 @@ $binDir   = "build\bin"
 if (-not (Test-Path $binDir)) { New-Item -ItemType Directory -Force -Path $binDir | Out-Null }
 Copy-Item "$rocmLibs\*.dll" $binDir -Force
 Copy-Item "$rocmBin\*.dll" $binDir -Force
-Write-Host "ROCm runtime DLLs copied to $binDir"
+# copy ROCm library data subdirectories (TensileLibrary, Kernels.so, etc.) to build\bin
+Get-ChildItem $rocmLibs -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    $dstSub = Join-Path $binDir $_.Name
+    if (Test-Path $dstSub) { Remove-Item -Recurse -Force $dstSub }
+    Copy-Item -Recurse -Force $_.FullName $dstSub
+    Write-Host "Copied $($_.Name) -> $dstSub" -ForegroundColor Gray
+}
+Get-ChildItem $rocmBin -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+    $dstSub = Join-Path $binDir $_.Name
+    if (Test-Path $dstSub) { Remove-Item -Recurse -Force $dstSub }
+    Copy-Item -Recurse -Force $_.FullName $dstSub
+    Write-Host "Copied $($_.Name) -> $dstSub" -ForegroundColor Gray
+}
+Write-Host "ROCm runtime DLLs + library data copied to $binDir" -ForegroundColor Green
